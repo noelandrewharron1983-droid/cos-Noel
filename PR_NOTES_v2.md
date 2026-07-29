@@ -1,0 +1,1 @@
+﻿Initial COS scaffold (v2).\n\nThis branch creates a separate PR from main to preserve merged history while collecting feedback. Includes prompts, web-ui, snippets, and Pages workflow in earlier commits on other branches.\n\nUse this branch to iterate further before final merge.
