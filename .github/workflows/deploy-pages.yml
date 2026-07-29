@@ -1,18 +1,255 @@
-name: Deploy COS site
-on:
-  push:
-    branches: [ main ]
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Copilot <copilot@users.noreply.github.com>
+Date: Thu, 29 Jul 2026 00:00:00 +0000
+Subject: [PATCH] fix: pages deploy workflow + index.htm clipboard fallback
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          personal_token: ${{ secrets.PAGES_PAT }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web-ui
+Replaces peaceiris Pages workflow with the official GitHub Pages actions (configure-pages,
+upload-pages-artifact, deploy-pages) and tightens job permissions. Also fixes clipboard
+handling in web-ui/index.htm to avoid unhandled promise rejections and add a robust
+fallback for older browsers. Adds PR_NOTES.md describing the changes and DNS steps.
+
+---
+ .github/workflows/deploy-pages.yml |  37 +++++++++++++++++++++++++++++++
+ PR_NOTES.md                        |  98 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ web-ui/index.htm                   | 222 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 356 insertions(+), 1 deletion(-)
+ create mode 100644 PR_NOTES.md
+ rewrite web-ui/index.htm (98%)
+ rewrite .github/workflows/deploy-pages.yml (100%)
+diff --git a/.github/workflows/deploy-pages.yml b/.github/workflows/deploy-pages.yml
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/.github/workflows/deploy-pages.yml
+@@ -0,0 +1,37 @@
++name: Deploy COS site
++on:
++  push:
++    branches: [ main ]
++
++jobs:
++  build-and-deploy:
++    runs-on: ubuntu-latest
++    permissions:
++      contents: read
++      pages: write
++      id-token: write
++
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++
++      - name: Configure Pages
++        uses: actions/configure-pages@v3
++
++      - name: Upload artifact
++        uses: actions/upload-pages-artifact@v1
++        with:
++          path: ./web-ui
++
++      - name: Deploy to GitHub Pages
++        uses: actions/deploy-pages@v1
++
+diff --git a/PR_NOTES.md b/PR_NOTES.md
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/PR_NOTES.md
+@@ -0,0 +1,98 @@
++PR: Fix Pages deployment workflow and make web-ui clipboard copy robust
++
++What I changed
++
++- Replaced .github/workflows/deploy-pages.yml to use the official Pages actions (configure-pages, upload-pages-artifact, deploy-pages) and set job permissions (contents: read, pages: write, id-token: write). This avoids the need for a Personal Access Token (PAT) and uses the runner-provided GITHUB_TOKEN with pages permission.
++
++- Patched web-ui/index.htm to fix clipboard handling:
++  - Properly handle navigator.clipboard Promises with .catch()
++  - Avoid calling .then() on undefined when clipboard API is missing
++  - Add a textarea/execCommand fallback for older browsers or insecure contexts
++
++Why
++
++- The repo previously used peaceiris/actions-gh-pages with a PAT; switching to the official actions simplifies permissions and is aligned with GitHub recommendations.
++- The index.htm code could trigger unhandled promise rejections or TypeErrors in some environments; the fix makes the UI more robust across browsers.
++
++Notes for deploy / DNS
++
++- The published site includes web-ui/CNAME (noelcreates.dev). You must ensure DNS is configured for that domain before GitHub Pages will serve it. Steps:
++  1. Add apex A records for noelcreates.dev pointing to GitHub Pages IPs:
++     - 185.199.108.153
++     - 185.199.109.153
++     - 185.199.110.153
++     - 185.199.111.153
++  2. (Optional) Add a CNAME for www → noelandrewharron1983-droid.github.io
++  3. If you use Cloudflare or other proxying, set records to DNS-only (disable proxying) while GitHub validates the domain and issues TLS.
++  4. In repo Settings → Pages, confirm the custom domain is set to noelcreates.dev and enable "Enforce HTTPS" after certificate issuance.
++
++Follow-up
++
++- After DNS updates, trigger a push to main or re-run the Pages workflow to publish. Check Actions logs for errors and Pages settings for the served domain.
++
+diff --git a/web-ui/index.htm b/web-ui/index.htm
+index 8e41bdd..3333333 100644
+--- a/web-ui/index.htm
++++ b/web-ui/index.htm
+@@ -1,226 +1,225 @@
+-﻿<!doctype html>
+-<html>
+-<head>
+- <meta charset="utf-8" />
+- <title>Noel COS Quick Switch</title>
+- <style>
+- body { font-family: system-ui, -apple-system, Arial; padding: 28px; background:#0f1724; color:#e6eef8; }
+- .bar { display:flex; gap:10px; align-items:center; }
+- button { padding:12px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+- .deep { background:#0ea5a4; color:#012; }
+- .storm { background:#7c3aed; color:#fff; }
+- .reset { background:#10b981; color:#012; }
+- .copy { background:#111827; color:#fff; }
+- select { padding:8px 10px; border-radius:6px; border:none; background:#111827; color:#e6eef8; }
+- pre { background:#0b1220; padding:12px; border-radius:8px; margin-top:16px; white-space:pre-wrap; }
+- </style>
+-</head>
+-<body>
+- <h1>Noel — COS Quick Switch</h1>
+- <div class="bar">
+- <button class="deep" onclick="activate('deep')">🔵 Deep Work</button>
+- <button class="storm" onclick="activate('storm')">🟣 Creative Storm</button>
+- <button class="reset" onclick="activate('reset')">🟢 Reset</button>
+- <label for="variant" style="margin-left:8px;color:#9aa4b2">Variant:</label>
+- <select id="variant"><option value="condensed">Condensed</option><option value="full">Full</option></select>
+- <button class="copy" onclick="copyCurrent()">📋 Copy Prompt</button>
+- </div>
+-
+- <pre id="promptArea">Activate a mode to load its condensed prompt.</pre>
+-
+- <script>
+- const prompts = {
+- deep: {
+-   condensed: "Deep Work Mode — Condensed\nFocus me. Cut fluff. Guide me toward finishing one high-quality asset.",
+-   full: "Deep Work Mode — Full\nActivate Deep Work Mode.\nWorkflow:\n1. Define the asset\n2. Build the structure\n3. Draft\n4. Refine\n5. Polish\n6. Finalise\n7. Archive or deploy"
+- },
+- storm: {
+-   condensed: "Creative Storm Mode — Condensed\nGive me fast, bold ideas with no filtering.",
+-   full: "Creative Storm Mode — Full\nActivate Creative Storm Mode.\nWorkflow:\n1. Set the theme\n2. Generate 10 fast ideas\n3. Expand 3\n4. Boldify 1\n5. Wild card\n6. Select\n7. Save for Deep Work [...]"
+- },
+- reset: {
+-   condensed: "Reset Mode — Condensed\nSlow the pace. Help me breathe, reflect, and re-centre.",
+-   full: "Reset Mode — Full\nActivate Reset Mode.\nWorkflow:\n1. Pause\n2. Reflect\n3. Release\n4. Re-centre\n5. Return to Daily Mode"
+- }
+- };
+- let current = "";
+- function activate(mode) {
+-   const variant = document.getElementById('variant').value || 'condensed';
+-   current = prompts[mode] ? (prompts[mode][variant] || prompts[mode].condensed) : '';
+-   document.getElementById('promptArea').textContent = current;
+-   try { navigator.clipboard.writeText(current); } catch(e) {}
+- }
+- function copyCurrent(){
+-   if(!current) current = document.getElementById('promptArea').textContent;
+-   navigator.clipboard?.writeText(current).then(()=> alert('Prompt copied to clipboard'));
+- }
+- </script>
+-</body>
+-</html>
++<!doctype html>
++<html>
++<head>
++ <meta charset="utf-8" />
++ <title>Noel COS Quick Switch</title>
++ <style>
++ body { font-family: system-ui, -apple-system, Arial; padding: 28px; background:#0f1724; color:#e6eef8; }
++ .bar { display:flex; gap:10px; align-items:center; }
++ button { padding:12px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
++ .deep { background:#0ea5a4; color:#012; }
++ .storm { background:#7c3aed; color:#fff; }
++ .reset { background:#10b981; color:#012; }
++ .copy { background:#111827; color:#fff; }
++ select { padding:8px 10px; border-radius:6px; border:none; background:#111827; color:#e6eef8; }
++ pre { background:#0b1220; padding:12px; border-radius:8px; margin-top:16px; white-space:pre-wrap; }
++ </style>
++</head>
++<body>
++ <h1>Noel — COS Quick Switch</h1>
++ <div class="bar">
++ <button class="deep" onclick="activate('deep')">🔵 Deep Work</button>
++ <button class="storm" onclick="activate('storm')">🟣 Creative Storm</button>
++ <button class="reset" onclick="activate('reset')">🟢 Reset</button>
++ <label for="variant" style="margin-left:8px;color:#9aa4b2">Variant:</label>
++ <select id="variant"><option value="condensed">Condensed</option><option value="full">Full</option></select>
++ <button class="copy" onclick="copyCurrent()">📋 Copy Prompt</button>
++ </div>
++
++ <pre id="promptArea">Activate a mode to load its condensed prompt.</pre>
++
++ <script>
++ const prompts = {
++ deep: {
++   condensed: "Deep Work Mode — Condensed\nFocus me. Cut fluff. Guide me toward finishing one high-quality asset.",
++   full: "Deep Work Mode — Full\nActivate Deep Work Mode.\nWorkflow:\n1. Define the asset\n2. Build the structure\n3. Draft\n4. Refine\n5. Polish\n6. Finalise\n7. Archive or deploy"
++ },
++ storm: {
++   condensed: "Creative Storm Mode — Condensed\nGive me fast, bold ideas with no filtering.",
++   full: "Creative Storm Mode — Full\nActivate Creative Storm Mode.\nWorkflow:\n1. Set the theme\n2. Generate 10 fast ideas\n3. Expand 3\n4. Boldify 1\n5. Wild card\n6. Select\n7. Save for Deep Work"
++ },
++ reset: {
++   condensed: "Reset Mode — Condensed\nSlow the pace. Help me breathe, reflect, and re-centre.",
++   full: "Reset Mode — Full\nActivate Reset Mode.\nWorkflow:\n1. Pause\n2. Reflect\n3. Release\n4. Re-centre\n5. Return to Daily Mode"
++ }
++ };
++ let current = "";
++
++ function activate(mode) {
++   const variant = document.getElementById('variant').value || 'condensed';
++   current = prompts[mode] ? (prompts[mode][variant] || prompts[mode].condensed) : '';
++   document.getElementById('promptArea').textContent = current;
++
++   // Try to copy to clipboard; handle Promise rejections gracefully
++   if (navigator.clipboard && navigator.clipboard.writeText) {
++     navigator.clipboard.writeText(current).catch(()=>{});
++   }
++ }
++
++ function fallbackCopyTextToClipboard(text) {
++   const textArea = document.createElement('textarea');
++   textArea.value = text;
++
++   // Avoid scrolling to bottom
++   textArea.style.position = 'fixed';
++   textArea.style.left = '-9999px';
++   document.body.appendChild(textArea);
++   textArea.focus();
++   textArea.select();
++
++   try {
++     return document.execCommand('copy');
++   } catch (err) {
++     return false;
++   } finally {
++     document.body.removeChild(textArea);
++   }
++ }
++
++ function copyCurrent(){
++   if(!current) current = document.getElementById('promptArea').textContent || '';
++
++   if (navigator.clipboard && navigator.clipboard.writeText) {
++     navigator.clipboard.writeText(current)
++       .then(()=> alert('Prompt copied to clipboard'))
++       .catch(()=> {
++         // Fallback to execCommand
++         const ok = fallbackCopyTextToClipboard(current);
++         alert(ok ? 'Prompt copied to clipboard' : 'Copy failed — try selecting the text and copying manually');
++       });
++     return;
++   }
++
++   // Fallback for older browsers
++   const ok = fallbackCopyTextToClipboard(current);
++   alert(ok ? 'Prompt copied to clipboard' : 'Copy failed — try selecting the text and copying manually');
++ }
++ </script>
++</body>
++</html>
+-- 
+2.39.0
