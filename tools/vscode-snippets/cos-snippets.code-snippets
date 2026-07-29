@@ -1,4 +1,4 @@
-{
+﻿{
   "Master COS Prompt": {
     "prefix": "cos-master",
     "body": [
@@ -16,6 +16,23 @@
     ],
     "description": "Insert Deep Work condensed prompt"
   },
+  "Deep Work Full": {
+    "prefix": "cos-deep-full",
+    "body": [
+      "Deep Work Mode — Full",
+      "Activate Deep Work Mode.",
+      "Atmosphere: Focus Soundtrack; Visuals: cool tones; Tone: sharp, minimal.",
+      "Workflow:",
+      "1. Define the asset",
+      "2. Build the structure",
+      "3. Draft",
+      "4. Refine",
+      "5. Polish",
+      "6. Finalise",
+      "7. Archive or deploy"
+    ],
+    "description": "Insert Deep Work full prompt"
+  },
   "Creative Storm Condensed": {
     "prefix": "cos-storm",
     "body": [
@@ -24,6 +41,23 @@
     ],
     "description": "Insert Creative Storm condensed prompt"
   },
+  "Creative Storm Full": {
+    "prefix": "cos-storm-full",
+    "body": [
+      "Creative Storm Mode — Full",
+      "Activate Creative Storm Mode.",
+      "Atmosphere: Cinematic, neon; Tone: energetic, playful.",
+      "Workflow:",
+      "1. Set the theme",
+      "2. Generate 10 fast ideas",
+      "3. Expand 3",
+      "4. Boldify 1",
+      "5. Wild card",
+      "6. Select",
+      "7. Save for Deep Work"
+    ],
+    "description": "Insert Creative Storm full prompt"
+  },
   "Reset Condensed": {
     "prefix": "cos-reset",
     "body": [
@@ -31,5 +65,20 @@
       "Slow the pace. Help me breathe, reflect, and re-centre."
     ],
     "description": "Insert Reset condensed prompt"
+  },
+  "Reset Full": {
+    "prefix": "cos-reset-full",
+    "body": [
+      "Reset Mode — Full",
+      "Activate Reset Mode.",
+      "Atmosphere: Warm, acoustic; Tone: gentle, reflective.",
+      "Workflow:",
+      "1. Pause",
+      "2. Reflect",
+      "3. Release",
+      "4. Re-centre",
+      "5. Return to Daily Mode"
+    ],
+    "description": "Insert Reset full prompt"
   }
 }
