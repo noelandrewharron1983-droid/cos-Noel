@@ -1,5 +1,5 @@
 ﻿<!doctype html>
-<html>
+<html lang="en">
 <head>
  <meta charset="utf-8" />
  <title>Noel COS Quick Switch</title>
@@ -16,14 +16,15 @@
  </style>
 </head>
 <body>
+ <main>
  <h1>Noel — COS Quick Switch</h1>
  <div class="bar">
- <button class="deep" onclick="activate('deep')">🔵 Deep Work</button>
- <button class="storm" onclick="activate('storm')">🟣 Creative Storm</button>
- <button class="reset" onclick="activate('reset')">🟢 Reset</button>
+ <button type="button" class="deep" onclick="activate('deep')" aria-label="Activate Deep Work mode">🔵 Deep Work</button>
+ <button type="button" class="storm" onclick="activate('storm')" aria-label="Activate Creative Storm mode">🟣 Creative Storm</button>
+ <button type="button" class="reset" onclick="activate('reset')" aria-label="Activate Reset mode">🟢 Reset</button>
  <label for="variant" style="margin-left:8px;color:#9aa4b2">Variant:</label>
- <select id="variant"><option value="condensed">Condensed</option><option value="full">Full</option></select>
- <button class="copy" onclick="copyCurrent()">📋 Copy Prompt</button>
+ <select id="variant" aria-label="Prompt variant"><option value="condensed">Condensed</option><option value="full">Full</option></select>
+ <button type="button" id="copyBtn" class="copy" onclick="copyCurrent()" aria-label="Copy prompt to clipboard">📋 Copy Prompt</button>
  </div>
 
  <pre id="promptArea">Activate a mode to load its condensed prompt.</pre>
@@ -44,16 +45,57 @@
  }
  };
  let current = "";
+ 
  function activate(mode) {
    const variant = document.getElementById('variant').value || 'condensed';
    current = prompts[mode] ? (prompts[mode][variant] || prompts[mode].condensed) : '';
    document.getElementById('promptArea').textContent = current;
-   try { navigator.clipboard.writeText(current); } catch(e) {}
+ 
+   // Try to copy to clipboard; handle Promise rejections gracefully
+   if (navigator.clipboard && navigator.clipboard.writeText) {
+     navigator.clipboard.writeText(current).catch(()=>{});
+   }
  }
+ 
+ function fallbackCopyTextToClipboard(text) {
+   const textArea = document.createElement('textarea');
+   textArea.value = text;
+ 
+   // Avoid scrolling to bottom
+   textArea.style.position = 'fixed';
+   textArea.style.left = '-9999px';
+   document.body.appendChild(textArea);
+   textArea.focus();
+   textArea.select();
+ 
+   try {
+     return document.execCommand('copy');
+   } catch (err) {
+     return false;
+   } finally {
+     document.body.removeChild(textArea);
+   }
+ }
+ 
  function copyCurrent(){
-   if(!current) current = document.getElementById('promptArea').textContent;
-   navigator.clipboard?.writeText(current).then(()=> alert('Prompt copied to clipboard'));
+   if(!current) current = document.getElementById('promptArea').textContent || '';
+ 
+   if (navigator.clipboard && navigator.clipboard.writeText) {
+     navigator.clipboard.writeText(current)
+       .then(()=> alert('Prompt copied to clipboard'))
+       .catch(()=> {
+         // Fallback to execCommand
+         const ok = fallbackCopyTextToClipboard(current);
+         alert(ok ? 'Prompt copied to clipboard' : 'Copy failed — try selecting the text and copying manually');
+       });
+     return;
+   }
+ 
+   // Fallback for older browsers
+   const ok = fallbackCopyTextToClipboard(current);
+   alert(ok ? 'Prompt copied to clipboard' : 'Copy failed — try selecting the text and copying manually');
  }
  </script>
+ </main>
 </body>
 </html>
