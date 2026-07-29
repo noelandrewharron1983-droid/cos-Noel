@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm install --save-dev @playwright/test
       
+      - name: Install Playwright browsers
+        run: npx playwright install
+      
       - name: Start web server
         run: |
           cd web-ui
