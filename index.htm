@@ -1,0 +1,59 @@
+﻿<!doctype html>
+<html>
+<head>
+ <meta charset="utf-8" />
+ <title>Noel COS Quick Switch</title>
+ <style>
+ body { font-family: system-ui, -apple-system, Arial; padding: 28px; background:#0f1724; color:#e6eef8; }
+ .bar { display:flex; gap:10px; align-items:center; }
+ button { padding:12px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+ .deep { background:#0ea5a4; color:#012; }
+ .storm { background:#7c3aed; color:#fff; }
+ .reset { background:#10b981; color:#012; }
+ .copy { background:#111827; color:#fff; }
+ select { padding:8px 10px; border-radius:6px; border:none; background:#111827; color:#e6eef8; }
+ pre { background:#0b1220; padding:12px; border-radius:8px; margin-top:16px; white-space:pre-wrap; }
+ </style>
+</head>
+<body>
+ <h1>Noel — COS Quick Switch</h1>
+ <div class="bar">
+ <button class="deep" onclick="activate('deep')">🔵 Deep Work</button>
+ <button class="storm" onclick="activate('storm')">🟣 Creative Storm</button>
+ <button class="reset" onclick="activate('reset')">🟢 Reset</button>
+ <label for="variant" style="margin-left:8px;color:#9aa4b2">Variant:</label>
+ <select id="variant"><option value="condensed">Condensed</option><option value="full">Full</option></select>
+ <button class="copy" onclick="copyCurrent()">📋 Copy Prompt</button>
+ </div>
+
+ <pre id="promptArea">Activate a mode to load its condensed prompt.</pre>
+
+ <script>
+ const prompts = {
+ deep: {
+   condensed: "Deep Work Mode — Condensed\nFocus me. Cut fluff. Guide me toward finishing one high-quality asset.",
+   full: "Deep Work Mode — Full\nActivate Deep Work Mode.\nWorkflow:\n1. Define the asset\n2. Build the structure\n3. Draft\n4. Refine\n5. Polish\n6. Finalise\n7. Archive or deploy"
+ },
+ storm: {
+   condensed: "Creative Storm Mode — Condensed\nGive me fast, bold ideas with no filtering.",
+   full: "Creative Storm Mode — Full\nActivate Creative Storm Mode.\nWorkflow:\n1. Set the theme\n2. Generate 10 fast ideas\n3. Expand 3\n4. Boldify 1\n5. Wild card\n6. Select\n7. Save for Deep Work"
+ },
+ reset: {
+   condensed: "Reset Mode — Condensed\nSlow the pace. Help me breathe, reflect, and re-centre.",
+   full: "Reset Mode — Full\nActivate Reset Mode.\nWorkflow:\n1. Pause\n2. Reflect\n3. Release\n4. Re-centre\n5. Return to Daily Mode"
+ }
+ };
+ let current = "";
+ function activate(mode) {
+   const variant = document.getElementById('variant').value || 'condensed';
+   current = prompts[mode] ? (prompts[mode][variant] || prompts[mode].condensed) : '';
+   document.getElementById('promptArea').textContent = current;
+   try { navigator.clipboard.writeText(current); } catch(e) {}
+ }
+ function copyCurrent(){
+   if(!current) current = document.getElementById('promptArea').textContent;
+   navigator.clipboard?.writeText(current).then(()=> alert('Prompt copied to clipboard'));
+ }
+ </script>
+</body>
+</html>
