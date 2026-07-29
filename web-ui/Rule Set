@@ -1,0 +1,40 @@
+Ruleset 1 — Protect the main branch (recommended)
+
+Ruleset name: Protect main
+Target refs / Branch name pattern: main
+Enforcement: Enabled
+Branch protection checks
+
+Require pull request reviews before merging: Enabled
+Required approving reviewers: 1
+Dismiss stale pull request approvals when new commits are pushed: Enabled
+Require review from Code Owners: Disabled (optional; enable only if you add a CODEOWNERS file)
+Require status checks to pass before merging: Enabled
+Status checks to require: [select your CI/build checks from the list — e.g. "build", "test", "lint", or the workflow names you see under Actions]
+Require branches to be up to date before merging: Enabled (recommended)
+Require linear history: Disabled (optional; turn on if you want to prevent merge commits)
+Require signed commits: Disabled (optional; stronger security)
+Push restrictions and admin bypass
+
+Restrict who can push to matching branches: Disabled (leave open for now)
+Allow force pushes: No
+Include administrators: No (keep protections for everyone; change to Yes only if you want admins to be able to bypass)
+Save the ruleset.
+
+Why each choice (plain language)
+
+Protect main with 1 reviewer: Someone else looking at the change catches mistakes without making reviews a big burden.
+Dismiss stale approvals: If the PR changes after approval, reviewers must re-check — prevents accidental approvals of new changes.
+Require status checks: Automated checks (build/tests) catch failures early; requiring them keeps the main branch healthy.
+Require branches to be up to date: Ensures the checks were run on the same code that will be merged.
+No push restrictions & no admin bypass: Keeps the repo simple for a small project — you can tighten later if you need stricter control.
+Leave advanced options off for now (linear history / signed commits): They add friction and are useful later as the team grows.
+What to do about gh-pages (deploy branch)
+
+Recommended: do not include gh-pages in any ruleset (leave it unprotected). Most deployment workflows create or update gh-pages automatically; protecting it can block the deploy.
+If you must protect gh-pages: create a separate ruleset targeting gh-pages and, in the Push restrictions section, explicitly allow the actor that the workflow uses (the GitHub Actions app or your deployment bot account). This lets the deploy workflow push while still protecting the branch from others.
+Practical checklist to finish after creating the ruleset
+
+In Settings → Actions → General → Workflow permissions, confirm “Read and write permissions” is selected.
+In Actions → Workflows, re-run the Deploy COS site workflow (open latest run → Re-run jobs).
+If a queued run from a third‑party action appears pending, approve it once via Settings → Actions → Review pending runs →
