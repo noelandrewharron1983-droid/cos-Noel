@@ -1,3 +1,4 @@
+const path = require('path');
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 
@@ -5,29 +6,20 @@ describe('Copy behavior', () => {
   let dom;
   let window;
   let document;
-  let originalExecCommand;
 
   beforeEach(() => {
-    const html = fs.readFileSync('web-ui/index.htm', 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '../../web-ui/index.htm'), 'utf8');
     dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
     window = dom.window;
     document = window.document;
-
-    // Preserve original execCommand
-    originalExecCommand = document.execCommand;
-
-    // Ensure execCommand exists (some JSDOM versions may not implement it)
-    if (typeof document.execCommand !== 'function') {
-      document.execCommand = () => false;
-    }
+    window.alert = jest.fn();
   });
 
   afterEach(() => {
     if(dom && dom.window && dom.window.close) dom.window.close();
-    document.execCommand = originalExecCommand;
   });
 
-  test('uses navigator.clipboard when available and updates live region', async () => {
+  test('uses navigator.clipboard when available and calls alert on success', async () => {
     const writeText = jest.fn().mockResolvedValue();
     window.navigator.clipboard = { writeText };
 
@@ -35,26 +27,20 @@ describe('Copy behavior', () => {
     const deepBtn = document.querySelector('button.deep');
     deepBtn.click();
 
-    const copyBtn = document.getElementById('copyBtn');
+    const copyBtn = document.querySelector('button.copy');
     copyBtn.click();
 
     // allow microtasks / promise resolution
     await Promise.resolve();
     await new Promise((r) => setTimeout(r, 0));
 
-    const status = document.getElementById('copyStatus');
     expect(writeText).toHaveBeenCalled();
-    expect(status).not.toBeNull();
-    expect(status.textContent).toMatch(/Prompt copied to clipboard/);
+    expect(window.alert).toHaveBeenCalledWith('Prompt copied to clipboard');
   });
 
-  test('does not throw when clipboard is unavailable', async () => {
+  test('does not throw and does not alert when clipboard is unavailable', async () => {
     // Ensure clipboard missing
     delete window.navigator.clipboard;
-    window.alert = jest.fn();
-
-    // execCommand fallback is not implemented in index.htm today
-    document.execCommand = jest.fn(() => true);
 
     const deepBtn = document.querySelector('button.deep');
     deepBtn.click();
@@ -65,7 +51,6 @@ describe('Copy behavior', () => {
     // allow any sync/async updates
     await new Promise((r) => setTimeout(r, 0));
 
-    expect(document.execCommand).not.toHaveBeenCalled();
     expect(window.alert).not.toHaveBeenCalled();
   });
 });

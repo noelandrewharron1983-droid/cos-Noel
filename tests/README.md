@@ -16,6 +16,6 @@ How to run Playwright E2E test
    npx playwright test tests/e2e/copy.spec.ts
 
 Notes
-- The tests assert the live region (#copyStatus) instead of relying on alert() so the implementation does not need to call alert().
+- The unit tests mock `navigator.clipboard` and assert that `alert('Prompt copied to clipboard')` is called on success. When clipboard is unavailable the button silently does nothing (no alert, no execCommand fallback).
 - The unit tests mock navigator.clipboard and document.execCommand for unit coverage.
-- The Playwright test asserts the live region content after triggering the copy action.
+- The Playwright E2E test clicks `button.copy` and listens for the browser `alert` confirmation dialog when clipboard write succeeds.
