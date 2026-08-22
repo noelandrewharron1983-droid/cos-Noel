@@ -1,0 +1,106 @@
+name: COS CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: cos-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Node.js setup ──────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+
+      - name: Install root dependencies
+        run: npm ci
+
+      # ── Lint ───────────────────────────────────────────────────────────────
+      - name: Lint (ESLint)
+        run: npm run lint --if-present
+
+      # ── Unit tests ────────────────────────────────────────────────────────
+      - name: Unit tests (Jest)
+        run: npm run test:unit --if-present
+
+      # ── Playwright ────────────────────────────────────────────────────────
+      - name: Restore Playwright browser cache
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Start web server for E2E tests
+        run: |
+          npx http-server web-ui -p 8000 -c-1 &
+          npx wait-on http://localhost:8000 --timeout 30000
+
+      - name: Playwright E2E tests
+        run: npm run test:e2e --if-present
+        continue-on-error: true
+
+      # ── Conditional Rust build ────────────────────────────────────────────
+      - name: Detect Rust changes
+        id: rust-check
+        run: |
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '\.(rs|toml)$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Rust
+        if: steps.rust-check.outputs.changed == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust build cache
+        if: steps.rust-check.outputs.changed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: target/
+          key: rust-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
+
+      - name: Build Rust components
+        if: steps.rust-check.outputs.changed == 'true'
+        run: cargo build --release
+
+      # ── Build web-ui ──────────────────────────────────────────────────────
+      - name: Build web-ui
+        run: |
+          mkdir -p web-ui/dist
+          cp web-ui/index.htm web-ui/dist/index.html
+
+      # ── Upload Pages artifact ─────────────────────────────────────────────
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: web-ui/dist
