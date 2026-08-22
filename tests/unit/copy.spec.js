@@ -82,4 +82,15 @@ describe('Copy behavior', () => {
 
     expect(document.querySelector('#promptArea').textContent).toContain('Deep Work Mode — Condensed');
   });
+
+  test('copy before activation announces no content', async () => {
+    const writeText = jest.fn().mockResolvedValue();
+    window.navigator.clipboard = { writeText };
+
+    document.querySelector('button.copy').click();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(writeText).not.toHaveBeenCalled();
+    expect(document.querySelector('#copyStatus').textContent).toContain('Nothing to copy yet');
+  });
 });

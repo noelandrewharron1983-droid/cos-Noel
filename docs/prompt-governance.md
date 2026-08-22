@@ -3,7 +3,7 @@
 ## Canonical source
 
 All mode and variant content is owned by:
-- `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js`
+- `prompts/catalog.js`
 
 Do not introduce duplicate inline prompt strings in UI code.
 

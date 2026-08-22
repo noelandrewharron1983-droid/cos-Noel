@@ -1,6 +1,6 @@
 ﻿# Creative Storm Mode — Full
 
-Canonical source: `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js` (mode: `storm`, variant: `full`)
+Canonical source: `prompts/catalog.js` (mode: `storm`, variant: `full`)
 
 Activate Creative Storm Mode.
 Atmosphere: Cinematic, neon; Tone: energetic, playful.

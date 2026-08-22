@@ -1,6 +1,6 @@
 ﻿# Reset Mode — Full
 
-Canonical source: `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js` (mode: `reset`, variant: `full`)
+Canonical source: `prompts/catalog.js` (mode: `reset`, variant: `full`)
 
 Activate Reset Mode.
 Atmosphere: Warm, acoustic; Tone: gentle, reflective.

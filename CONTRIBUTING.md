@@ -2,13 +2,13 @@
 
 ## Prompt change workflow
 
-1. Update canonical content in `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js`.
-2. Update any related reference docs in `/home/runner/work/cos-Noel/cos-Noel/prompts/` and `/home/runner/work/cos-Noel/cos-Noel/docs/`.
+1. Update canonical content in `prompts/catalog.js`.
+2. Update any related reference docs in `prompts/` and `docs/`.
 3. Run tests:
    - `npm run test:unit`
    - `npm run test:accessibility`
    - `npm run test:e2e`
-4. Include a release note entry using `/home/runner/work/cos-Noel/cos-Noel/docs/release-notes-template.md`.
+4. Include a release note entry using `docs/release-notes-template.md`.
 
 ## Prompt governance rules
 

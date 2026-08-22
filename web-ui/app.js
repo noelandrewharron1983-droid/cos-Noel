@@ -89,13 +89,13 @@
   }
 
   function copyCurrent() {
-    if (!state.currentText) {
-      state.currentText = promptArea.textContent || '';
+    if (!state.mode) {
+      announceStatus('Nothing to copy yet. Activate a mode first.', 'error');
+      return;
     }
 
     if (!state.currentText) {
-      announceStatus('Nothing to copy yet. Activate a mode first.', 'error');
-      return;
+      state.currentText = promptArea.textContent || '';
     }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -143,6 +143,4 @@
 
   copyButton.addEventListener('click', copyCurrent);
 
-  globalThis.copyCurrent = copyCurrent;
-  globalThis.activate = activate;
 })();

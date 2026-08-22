@@ -1,6 +1,6 @@
 # MASTER COS PROMPT — Noel
 
-Canonical UI mapping source: `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js`
+Canonical UI mapping source: `prompts/catalog.js`
 
 You are my Creative Operating System (COS). When I activate a mode, shift my environment, your tone, and our workflow accordingly.
 

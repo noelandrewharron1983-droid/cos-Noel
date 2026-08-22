@@ -23,7 +23,7 @@ cos-Noel is both:
 ## Canonical prompt content
 
 Prompt content lives in one place:
-- `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js`
+- `prompts/catalog.js`
 
 `web-ui` reads this catalog directly, and prompt docs reference it.
 
@@ -57,7 +57,7 @@ npm test
 ```
 
 ### Run the UI locally
-- Open `/home/runner/work/cos-Noel/cos-Noel/web-ui/index.htm` directly, or
+- Open `web-ui/index.htm` directly, or
 - Serve the repo root with a static server:
   ```bash
   npx http-server -p 3000 -c-1 .
@@ -83,4 +83,4 @@ These mappings align with `/prompts/master-cos.md` and are encoded in `/prompts/
 
 ## Contributing
 
-See `/home/runner/work/cos-Noel/cos-Noel/CONTRIBUTING.md`.
+See `CONTRIBUTING.md`.
