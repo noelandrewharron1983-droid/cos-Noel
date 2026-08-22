@@ -2,155 +2,44 @@ name: Test web-ui
 
 on:
   push:
+    branches: [main]
     paths:
       - 'web-ui/**'
+      - 'prompts/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'playwright.config.js'
       - '.github/workflows/test-web-ui.yml'
-    branches: [ main ]
   pull_request:
     paths:
       - 'web-ui/**'
+      - 'prompts/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'playwright.config.js'
       - '.github/workflows/test-web-ui.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      
+          node-version: '20'
+          cache: 'npm'
+
       - name: Install dependencies
-        run: npm install --save-dev @playwright/test
-      
+        run: npm install
+
       - name: Install Playwright browsers
-        run: npx playwright install
-      
-      - name: Start web server
-        run: |
-          cd web-ui
-          npx http-server -p 8000 -c-1 &
-          sleep 2
-      
-      - name: Run Playwright tests
-        run: |
-          cat > test-web-ui.spec.js << 'EOF'
-          const { test, expect } = require('@playwright/test');
+        run: npx playwright install --with-deps
 
-          test.describe('web-ui/index.htm', () => {
-            let page;
+      - name: Run unit + accessibility tests
+        run: npm run test
 
-            test.beforeAll(async () => {
-              const browser = await require('@playwright/test').chromium.launch();
-              page = await browser.newPage();
-              await page.goto('http://localhost:8000/index.htm');
-            });
-
-            test('loads without errors', async () => {
-              const content = await page.content();
-              expect(content).toContain('Noel — COS Quick Switch');
-            });
-
-            test('Deep Work button updates promptArea', async () => {
-              await page.click('button.deep');
-              const text = await page.textContent('#promptArea');
-              expect(text).toContain('Deep Work Mode');
-            });
-
-            test('Storm button updates promptArea', async () => {
-              await page.click('button.storm');
-              const text = await page.textContent('#promptArea');
-              expect(text).toContain('Creative Storm Mode');
-            });
-
-            test('Reset button updates promptArea', async () => {
-              await page.click('button.reset');
-              const text = await page.textContent('#promptArea');
-              expect(text).toContain('Reset Mode');
-            });
-
-            test('variant selector works', async () => {
-              await page.selectOption('#variant', 'full');
-              await page.click('button.deep');
-              const text = await page.textContent('#promptArea');
-              expect(text).toContain('Workflow');
-            });
-
-            test('Copy button shows alert', async () => {
-              await page.click('button.deep');
-              page.on('dialog', dialog => {
-                expect(dialog.message()).toContain('Prompt copied to clipboard');
-                dialog.dismiss();
-              });
-              await page.click('button.copy');
-            });
-
-            test('buttons have aria-labels for accessibility', async () => {
-              const deepBtn = await page.$('button.deep');
-              const label = await deepBtn.getAttribute('aria-label');
-              expect(label).toBe('Activate Deep Work mode');
-            });
-
-            test('buttons have explicit type attribute', async () => {
-              const deepBtn = await page.$('button.deep');
-              const type = await deepBtn.getAttribute('type');
-              expect(type).toBe('button');
-            });
-
-            test('no console errors', async () => {
-              const logs = [];
-              page.on('console', msg => {
-                if (msg.type() === 'error') {
-                  logs.push(msg.text());
-                }
-              });
-              await page.click('button.deep');
-              await page.click('button.copy');
-              expect(logs).toHaveLength(0);
-            });
-
-            test('clipboard fallback works when API unavailable', async () => {
-              await page.evaluate(() => {
-                navigator.clipboard = undefined;
-              });
-              await page.click('button.deep');
-              page.on('dialog', dialog => {
-                expect(dialog.message()).toContain('Prompt copied to clipboard');
-                dialog.dismiss();
-              });
-              await page.click('button.copy');
-            });
-          });
-          EOF
-          
-          npx playwright test test-web-ui.spec.js --reporter=list
-      
-      - name: Run accessibility audit
-        run: |
-          npm install --save-dev pa11y-ci
-          cat > .pa11yci.json << 'EOF'
-          {
-            "runners": ["axe"],
-            "standard": "WCAG2AA",
-            "timeout": 10000,
-            "wait": 1000,
-            "chromeLaunchConfig": {
-              "args": ["--no-sandbox"]
-            }
-          }
-          EOF
-          npx pa11y-ci http://localhost:8000/index.htm || true
-        continue-on-error: true
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            test-results/
-            .pa11y-ci-result.json
-          retention-days: 7
+      - name: Run e2e tests
+        run: npm run test:e2e

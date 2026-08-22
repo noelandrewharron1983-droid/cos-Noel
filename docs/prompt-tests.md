@@ -1,6 +1,6 @@
 # Prompt tests and acceptance
 
-This document lists canonical example commands, the expected assistant behavior, and sample transcripts you can use to validate the master COS prompt.
+This document lists canonical example commands and expected behavior used to validate COS prompt quality.
 
 ## Test cases
 
@@ -20,6 +20,14 @@ Assistant: "Entering Deep Work (condensed). Top 3 priorities: 1) Draft section A
 - Command: Activate Reset — Quick
 - Expected behavior: Assistant provides a short (1–3 line) recovery checklist, a summary of what was last done, and the next small action to resume work.
 
+4) Deep Work — Quick alias behavior
+- Command: Activate Deep Work — Quick
+- Expected behavior: Uses Deep Work condensed behavior (quick aliases to condensed for this mode in catalog).
+
+5) Copy feedback behavior
+- Action: Click Copy Prompt after selecting any mode.
+- Expected behavior: UI provides non-blocking status text announcing copy success/failure (clipboard API or fallback path).
+
 ## Notes for reviewers
 - Use these commands verbatim in a test chat to check for tone and structure.
-- If the assistant fails to match expected structure, file feedback in the prompt-feedback issue template or comment directly on PR #4.
+- If behavior diverges from these expectations, update `/prompts/catalog.js`, associated docs, and tests in the same change.

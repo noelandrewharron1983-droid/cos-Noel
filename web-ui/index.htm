@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
  <meta charset="utf-8" />
@@ -13,89 +13,31 @@
  .copy { background:#111827; color:#fff; }
  select { padding:8px 10px; border-radius:6px; border:none; background:#111827; color:#e6eef8; }
  pre { background:#0b1220; padding:12px; border-radius:8px; margin-top:16px; white-space:pre-wrap; }
+ .status { margin-top:10px; min-height:20px; color:#9aa4b2; }
+ .status[data-status="success"] { color:#34d399; }
+ .status[data-status="error"] { color:#fca5a5; }
  </style>
 </head>
 <body>
  <main>
  <h1>Noel — COS Quick Switch</h1>
  <div class="bar">
- <button type="button" class="deep" onclick="activate('deep')" aria-label="Activate Deep Work mode">🔵 Deep Work</button>
- <button type="button" class="storm" onclick="activate('storm')" aria-label="Activate Creative Storm mode">🟣 Creative Storm</button>
- <button type="button" class="reset" onclick="activate('reset')" aria-label="Activate Reset mode">🟢 Reset</button>
+ <button type="button" class="deep" data-mode="deep" aria-label="Activate Deep Work mode">🔵 Deep Work</button>
+ <button type="button" class="storm" data-mode="storm" aria-label="Activate Creative Storm mode">🟣 Creative Storm</button>
+ <button type="button" class="reset" data-mode="reset" aria-label="Activate Reset mode">🟢 Reset</button>
  <label for="variant" style="margin-left:8px;color:#9aa4b2">Variant:</label>
- <select id="variant" aria-label="Prompt variant"><option value="condensed">Condensed</option><option value="full">Full</option></select>
- <button type="button" id="copyBtn" class="copy" onclick="copyCurrent()" aria-label="Copy prompt to clipboard">📋 Copy Prompt</button>
+ <select id="variant" aria-label="Prompt variant">
+   <option value="condensed">Condensed</option>
+   <option value="full">Full</option>
+   <option value="quick">Quick</option>
+ </select>
+ <button type="button" id="copyBtn" class="copy" aria-label="Copy prompt to clipboard">📋 Copy Prompt</button>
  </div>
 
  <pre id="promptArea">Activate a mode to load its condensed prompt.</pre>
-
- <script>
- const prompts = {
- deep: {
-   condensed: "Deep Work Mode — Condensed\nFocus me. Cut fluff. Guide me toward finishing one high-quality asset.",
-   full: "Deep Work Mode — Full\nActivate Deep Work Mode.\nWorkflow:\n1. Define the asset\n2. Build the structure\n3. Draft\n4. Refine\n5. Polish\n6. Finalise\n7. Archive or deploy"
- },
- storm: {
-   condensed: "Creative Storm Mode — Condensed\nGive me fast, bold ideas with no filtering.",
-   full: "Creative Storm Mode — Full\nActivate Creative Storm Mode.\nWorkflow:\n1. Set the theme\n2. Generate 10 fast ideas\n3. Expand 3\n4. Boldify 1\n5. Wild card\n6. Select\n7. Save for Deep Work"
- },
- reset: {
-   condensed: "Reset Mode — Condensed\nSlow the pace. Help me breathe, reflect, and re-centre.",
-   full: "Reset Mode — Full\nActivate Reset Mode.\nWorkflow:\n1. Pause\n2. Reflect\n3. Release\n4. Re-centre\n5. Return to Daily Mode"
- }
- };
- let current = "";
- 
- function activate(mode) {
-   const variant = document.getElementById('variant').value || 'condensed';
-   current = prompts[mode] ? (prompts[mode][variant] || prompts[mode].condensed) : '';
-   document.getElementById('promptArea').textContent = current;
- 
-   // Try to copy to clipboard; handle Promise rejections gracefully
-   if (navigator.clipboard && navigator.clipboard.writeText) {
-     navigator.clipboard.writeText(current).catch(()=>{});
-   }
- }
- 
- function fallbackCopyTextToClipboard(text) {
-   const textArea = document.createElement('textarea');
-   textArea.value = text;
- 
-   // Avoid scrolling to bottom
-   textArea.style.position = 'fixed';
-   textArea.style.left = '-9999px';
-   document.body.appendChild(textArea);
-   textArea.focus();
-   textArea.select();
- 
-   try {
-     return document.execCommand('copy');
-   } catch (err) {
-     return false;
-   } finally {
-     document.body.removeChild(textArea);
-   }
- }
- 
- function copyCurrent(){
-   if(!current) current = document.getElementById('promptArea').textContent || '';
- 
-   if (navigator.clipboard && navigator.clipboard.writeText) {
-     navigator.clipboard.writeText(current)
-       .then(()=> alert('Prompt copied to clipboard'))
-       .catch(()=> {
-         // Fallback to execCommand
-         const ok = fallbackCopyTextToClipboard(current);
-         alert(ok ? 'Prompt copied to clipboard' : 'Copy failed — try selecting the text and copying manually');
-       });
-     return;
-   }
- 
-   // Fallback for older browsers
-   const ok = fallbackCopyTextToClipboard(current);
-   alert(ok ? 'Prompt copied to clipboard' : 'Copy failed — try selecting the text and copying manually');
- }
- </script>
+ <p id="copyStatus" class="status" data-status="idle" role="status" aria-live="polite" aria-atomic="true"></p>
+ <script src="../prompts/catalog.js"></script>
+ <script src="./app.js"></script>
  </main>
 </body>
 </html>

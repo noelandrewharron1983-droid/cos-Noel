@@ -1,5 +1,7 @@
 ﻿# Deep Work Mode — Full
 
+Canonical source: `/home/runner/work/cos-Noel/cos-Noel/prompts/catalog.js` (mode: `deep`, variant: `full`)
+
 Activate Deep Work Mode.
 Atmosphere: Focus Soundtrack; Visuals: cool tones; Tone: sharp, minimal.
 
