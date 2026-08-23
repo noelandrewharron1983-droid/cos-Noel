@@ -65,7 +65,6 @@ jobs:
 
       - name: Playwright E2E tests
         run: npm run test:e2e --if-present
-        continue-on-error: true
 
       # ── Conditional Rust build ────────────────────────────────────────────
       - name: Detect Rust changes
