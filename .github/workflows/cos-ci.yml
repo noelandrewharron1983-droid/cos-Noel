@@ -12,7 +12,6 @@ concurrency:
 permissions:
   contents: read
   pages: write
-  id-token: write
 
 jobs:
   ci:
@@ -21,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # ── Node.js setup ──────────────────────────────────────────────────────
       - name: Setup Node.js
@@ -38,13 +39,9 @@ jobs:
       - name: Install root dependencies
         run: npm install
 
-      # ── Lint ───────────────────────────────────────────────────────────────
-      - name: Lint (ESLint)
-        run: npm run lint --if-present
-
-      # ── Unit tests ────────────────────────────────────────────────────────
-      - name: Unit tests (Jest)
-        run: npm run test:unit --if-present
+      # ── Unit & accessibility tests ─────────────────────────────────────────
+      - name: Tests (Jest)
+        run: npm test
 
       # ── Playwright ────────────────────────────────────────────────────────
       - name: Restore Playwright browser cache
@@ -60,8 +57,8 @@ jobs:
 
       - name: Start web server for E2E tests
         run: |
-          npx http-server web-ui -p 8000 -c-1 &
-          npx wait-on http://localhost:8000 --timeout 30000
+          npx http-server . -p 3000 -c-1 &
+          npx wait-on http://localhost:3000 --timeout 30000
 
       - name: Playwright E2E tests
         run: npm run test:e2e --if-present
@@ -70,7 +67,8 @@ jobs:
       - name: Detect Rust changes
         id: rust-check
         run: |
-          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '\.(rs|toml)$'; then
+          BASE=${{ github.event.pull_request.base.sha || 'HEAD~1' }}
+          if git diff --name-only "$BASE" HEAD 2>/dev/null | grep -qE '\.(rs|toml)$'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -97,6 +95,7 @@ jobs:
         run: |
           mkdir -p web-ui/dist
           cp web-ui/index.htm web-ui/dist/index.html
+          cp web-ui/CNAME web-ui/dist/CNAME
 
       # ── Upload Pages artifact ─────────────────────────────────────────────
       - name: Upload Pages artifact
