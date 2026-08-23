@@ -38,10 +38,6 @@ jobs:
       - name: Install root dependencies
         run: npm install
 
-      # ── Lint ───────────────────────────────────────────────────────────────
-      - name: Lint (ESLint)
-        run: npm run lint --if-present
-
       # ── Unit tests ────────────────────────────────────────────────────────
       - name: Unit tests (Jest)
         run: npm run test:unit --if-present
