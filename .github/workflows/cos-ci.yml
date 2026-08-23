@@ -11,7 +11,6 @@ concurrency:
 
 permissions:
   contents: read
-  pages: write
 
 jobs:
   ci:
@@ -33,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package.json') }}
           restore-keys: npm-${{ runner.os }}-
 
       - name: Install root dependencies
@@ -49,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.pw-cache.outputs.cache-hit != 'true'
@@ -66,9 +65,10 @@ jobs:
       # ── Conditional Rust build ────────────────────────────────────────────
       - name: Detect Rust changes
         id: rust-check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
         run: |
-          BASE=${{ github.event.pull_request.base.sha || 'HEAD~1' }}
-          if git diff --name-only "$BASE" HEAD 2>/dev/null | grep -qE '\.(rs|toml)$'; then
+          if git diff --name-only "$BASE_SHA" HEAD 2>/dev/null | grep -qE '\.(rs|toml)$'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
