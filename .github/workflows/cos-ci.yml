@@ -93,6 +93,7 @@ jobs:
         run: |
           mkdir -p web-ui/dist
           cp web-ui/index.htm web-ui/dist/index.html
+          cp web-ui/CNAME web-ui/dist/CNAME
 
       # ── Upload Pages artifact ─────────────────────────────────────────────
       - name: Upload Pages artifact
